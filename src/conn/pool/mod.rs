@@ -313,6 +313,7 @@ impl Pool {
         if let Some(w) = exchange.waiting.pop() {
             w.wake();
         }
+        self.inner.metrics.active_wait_requests.fetch_sub(1, atomic::Ordering::Relaxed);
     }
 
     /// Poll the pool for an available connection.

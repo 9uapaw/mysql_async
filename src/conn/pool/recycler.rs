@@ -93,6 +93,11 @@ impl Future for Recycler {
                         .metrics
                         .connections_in_pool
                         .store(exchange.available.len(), Ordering::Relaxed);
+                    $self
+                        .inner
+                        .metrics
+                        .active_wait_requests
+                        .fetch_sub(1, Ordering::Relaxed);
                     if let Some(w) = exchange.waiting.pop() {
                         w.wake();
                     }
@@ -247,6 +252,10 @@ impl Future for Recycler {
                 .connection_count
                 .store(exchange.exist, Ordering::Relaxed);
             for _ in 0..self.discarded {
+                self.inner
+                    .metrics
+                    .active_wait_requests
+                    .fetch_sub(self.discarded, Ordering::Relaxed);
                 if let Some(w) = exchange.waiting.pop() {
                     w.wake();
                 }
